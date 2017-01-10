@@ -139,7 +139,7 @@ export default function __identity($compile, FileLikeObject) {
             this.isCancel = false;
             this.isError = false;
             this.progress = 0;
-            this.onBeforeUpload();
+            return this.onBeforeUpload();
         }
         /**
          * Inner callback

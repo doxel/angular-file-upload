@@ -18,15 +18,15 @@ let {
     } = angular;
 
 
-export default function __identity(fileUploaderOptions, $rootScope, $http, $window, $timeout, FileLikeObject, FileItem, Pipeline) {
-    
-    
+export default function __identity(fileUploaderOptions, $rootScope, $http, $window, $timeout, FileLikeObject, FileItem, Pipeline, $q) {
+
+
     let {
         File,
         FormData
         } = $window;
-    
-    
+
+
     class FileUploader {
         /**********************
          * PUBLIC
@@ -38,7 +38,7 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
          */
         constructor(options) {
             var settings = copy(fileUploaderOptions);
-            
+
             extend(this, settings, options, {
                 isUploading: false,
                 _nextIndex: 0,
@@ -63,11 +63,11 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
 
             let next = () => {
                 let something = incomingQueue.shift();
-                
+
                 if (isUndefined(something)) {
                     return done();
                 }
-                
+
                 let fileLikeObject = this.isFile(something) ? something : new FileLikeObject(something);
                 let pipes = this._convertFiltersToPipes(arrayOfFilters);
                 let pipeline = new Pipeline(pipes);
@@ -88,7 +88,7 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
                 pipeline.onSuccessful = onSuccessful;
                 pipeline.exec(fileLikeObject, options);
             };
-                
+
             let done = () => {
                 if(this.queue.length !== count) {
                     this._onAfterAddingAll(addedFileItems);
@@ -98,7 +98,7 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
                 this._render();
                 if (this.autoUpload) this.uploadAll();
             };
-            
+
             next();
         }
         /**
@@ -134,13 +134,24 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
             item._prepareToUploading();
             if(this.isUploading) return;
 
-            this._onBeforeUploadItem(item);
-            if (item.isCancel) return;
+            var context=this;
+            var result=this._onBeforeUploadItem(item);
+            var deferred;
+            if (result && result.promise) {
+              deferred=result;
+            } else {
+              deferred=$q.defer();
+              deferred.resolve();
+            }
 
-            item.isUploading = true;
-            this.isUploading = true;
-            this[transport](item);
-            this._render();
+            deferred.promise.then(function(){
+              if(item.isCancel) return;
+
+              item.isUploading = true;
+              context.isUploading = true;
+              context[transport](item);
+              context._render();
+            });
         }
         /**
          * Cancels uploading of item from the queue
@@ -627,8 +638,31 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
          * @private
          */
         _onBeforeUploadItem(item) {
-            item._onBeforeUpload();
-            this.onBeforeUploadItem(item);
+            var context=this;
+            var deferred=$q.defer();
+            var promise;
+
+            var result=item._onBeforeUpload();
+            if (result && result.promise) {
+              promise=result.promise;
+            } else {
+              var q=$q.defer();
+              q.resolve();
+              promise=q.promise;
+            }
+
+            promise.then(function(){
+              // I dunno why I cannot chain promises like when using Q, so there it is.
+              var result=context.onBeforeUploadItem(item);
+              if (result && result.promise) {
+                result.promise.then(deferred.resolve);
+              } else {
+                deferred.resolve();
+              }
+            });
+
+            return deferred;
+
         }
         /**
          * Inner callback
@@ -763,18 +797,19 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
      */
     FileUploader.isHTML5 = FileUploader.prototype.isHTML5;
 
-    
+
     return FileUploader;
 }
 
 
 __identity.$inject = [
-    'fileUploaderOptions', 
-    '$rootScope', 
-    '$http', 
+    'fileUploaderOptions',
+    '$rootScope',
+    '$http',
     '$window',
     '$timeout',
     'FileLikeObject',
     'FileItem',
-    'Pipeline'
+    'Pipeline',
+    '$q'
 ];
