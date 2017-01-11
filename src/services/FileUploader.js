@@ -129,6 +129,9 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
         uploadItem(value) {
             var index = this.getIndexOfItem(value);
             var item = this.queue[index];
+
+            if (item.isCancel) return;
+
             var transport = this.isHTML5 ? '_xhrTransport' : '_iframeTransport';
 
             item._prepareToUploading();
