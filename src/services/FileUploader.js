@@ -138,18 +138,8 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
             if(this.isUploading) return;
 
             var context=this;
-            var result=this._onBeforeUploadItem(item);
-            var deferred;
-            if (result && result.promise) {
-              deferred=result;
-            } else {
-              deferred=$q.defer();
-              deferred.resolve();
-            }
-
-            deferred.promise.then(function(){
+            $q.when(context._onBeforeUploadItem(item)).then(function(){
               if(item.isCancel) return;
-
               item.isUploading = true;
               context.isUploading = true;
               context[transport](item);
@@ -642,30 +632,9 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
          */
         _onBeforeUploadItem(item) {
             var context=this;
-            var deferred=$q.defer();
-            var promise;
-
-            var result=item._onBeforeUpload();
-            if (result && result.promise) {
-              promise=result.promise;
-            } else {
-              var q=$q.defer();
-              q.resolve();
-              promise=q.promise;
-            }
-
-            promise.then(function(){
-              // I dunno why I cannot chain promises like when using Q, so there it is.
-              var result=context.onBeforeUploadItem(item);
-              if (result && result.promise) {
-                result.promise.then(deferred.resolve);
-              } else {
-                deferred.resolve();
-              }
+            return $q.when(item._onBeforeUpload()).then(function(){
+              return $q.when(context.onBeforeUploadItem(item));
             });
-
-            return deferred;
-
         }
         /**
          * Inner callback
