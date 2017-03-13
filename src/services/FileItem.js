@@ -179,7 +179,7 @@ export default function __identity($compile, FileLikeObject) {
         _onError(response, status, headers) {
             this.isReady = false;
             this.isUploading = false;
-            this.isUploaded = true;
+            this.isUploaded = false;
             this.isSuccess = false;
             this.isCancel = false;
             this.isError = true;
