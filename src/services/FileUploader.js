@@ -130,7 +130,7 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
             var index = this.getIndexOfItem(value);
             var item = this.queue[index];
 
-            if (item.isCancel) return;
+            if (item.isCancel) return cancelItem(item);
 
             var transport = this.isHTML5 ? '_xhrTransport' : '_iframeTransport';
 
@@ -139,7 +139,7 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
 
             var context=this;
             $q.when(context._onBeforeUploadItem(item)).then(function(){
-              if(item.isCancel) return;
+              if(item.isCancel) return cancelItem(item);
               item.isUploading = true;
               context.isUploading = true;
               context[transport](item);
@@ -174,6 +174,7 @@ export default function __identity(fileUploaderOptions, $rootScope, $http, $wind
         uploadAll() {
             var items = this.getNotUploadedItems().filter(item => !item.isUploading);
             if(!items.length) return;
+            items[0].isCancel=false;
 
             forEach(items, item => item._prepareToUploading());
             items[0].upload();
