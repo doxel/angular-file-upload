@@ -315,7 +315,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var index = this.getIndexOfItem(value);
 	            var item = this.queue[index];
 	
-	            if (item.isCancel) return;
+	            if (item.isCancel) return cancelItem(item);
 	
 	            var transport = this.isHTML5 ? '_xhrTransport' : '_iframeTransport';
 	
@@ -324,7 +324,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	            var context = this;
 	            $q.when(context._onBeforeUploadItem(item)).then(function () {
-	                if (item.isCancel) return;
+	                if (item.isCancel) return cancelItem(item);
 	                item.isUploading = true;
 	                context.isUploading = true;
 	                context[transport](item);
@@ -369,6 +369,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return !item.isUploading;
 	            });
 	            if (!items.length) return;
+	            items[0].isCancel = false;
 	
 	            forEach(items, function (item) {
 	                return item._prepareToUploading();
