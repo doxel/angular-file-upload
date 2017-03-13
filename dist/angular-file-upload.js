@@ -1,5 +1,5 @@
 /*
- angular-file-upload v2.4.1
+ angular-file-upload v2.5.0
  https://github.com/nervgh/angular-file-upload
 */
 
@@ -1217,8 +1217,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            try {
 	                this.uploader.uploadItem(this);
 	            } catch (e) {
-	                this.uploader._onCompleteItem(this, '', 0, []);
-	                this.uploader._onErrorItem(this, '', 0, []);
+	                var message = e.name + ':' + e.message;
+	                this.uploader._onCompleteItem(this, message, e.code, []);
+	                this.uploader._onErrorItem(this, message, e.code, []);
 	            }
 	        };
 	        /**
