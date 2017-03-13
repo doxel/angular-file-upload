@@ -8,6 +8,17 @@
 
 When files are selected or dropped into the component, one or more filters are applied. Files which pass all filters are added to the queue. When file is added to the queue, for him is created instance of `{FileItem}` and uploader options are copied into this object. After, items in the queue (FileItems) are ready for uploading.
 
+## Build
+```
+npm install
+gulp  angular-file-upload/build
+```
+
+## Run Tests
+```
+gulp angular-file-upload/watch
+```
+
 ## Package managers
 ### Bower
 ```
